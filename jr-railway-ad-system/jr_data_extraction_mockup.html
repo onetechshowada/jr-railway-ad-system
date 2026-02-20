@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JRデータ抽出 - Weather Marketing Inc.</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: #F5F7FA;
+            color: #1F2937;
+            line-height: 1.6;
+        }
+
+        /* ヘッダー */
+        .header {
+            background-color: #FFFFFF;
+            border-bottom: 1px solid #E5E7EB;
+            padding: 1rem 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #2563EB;
+        }
+
+        /* パンくず */
+        .breadcrumb {
+            background-color: #FFFFFF;
+            padding: 1rem 2rem;
+            border-bottom: 1px solid #E5E7EB;
+        }
+
+        .breadcrumb-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: #6B7280;
+        }
+
+        .breadcrumb-content a {
+            color: #2563EB;
+            text-decoration: none;
+        }
+
+        .breadcrumb-content a:hover {
+            text-decoration: underline;
+        }
+
+        /* メインコンテナ */
+        .main-container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        /* 抽出条件エリア */
+        .condition-area {
+            background-color: #FFFFFF;
+            border-radius: 8px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .condition-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .condition-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1F2937;
+        }
+
+        .btn-edit-condition {
+            background-color: #2563EB;
+            color: #FFFFFF;
+            border: none;
+            padding: 0.5rem 1.5rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn-edit-condition:hover {
+            background-color: #1D4ED8;
+        }
+
+        /* 空状態 */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            color: #D1D5DB;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state h3 {
+            font-size: 1.25rem;
+            color: #1F2937;
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-state p {
+            color: #6B7280;
+            margin-bottom: 2rem;
+        }
+
+        .btn-set-condition {
+            background-color: #2563EB;
+            color: #FFFFFF;
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn-set-condition:hover {
+            background-color: #1D4ED8;
+        }
+
+        /* 条件リスト */
+        .condition-list {
+            display: none;
+        }
+
+        .condition-list.active {
+            display: block;
+        }
+
+        .condition-item {
+            background-color: #F9FAFB;
+            border: 1px solid #E5E7EB;
+            border-radius: 6px;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .condition-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .condition-category {
+            font-weight: 600;
+            color: #2563EB;
+            font-size: 0.875rem;
+        }
+
+        .condition-remove {
+            color: #EF4444;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+
+        .condition-details {
+            font-size: 0.875rem;
+            color: #4B5563;
+        }
+
+        /* ステータスバー */
+        .status-bar {
+            background-color: #FFFFFF;
+            border-radius: 8px;
+            padding: 1rem 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-label {
+            font-size: 0.875rem;
+            color: #6B7280;
+        }
+
+        .status-value {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #1F2937;
+        }
+
+        .status-count {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #2563EB;
+        }
+
+        /* ロケーションタブ */
+        .location-tabs {
+            background-color: #FFFFFF;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+
+        .location-tabs.active {
+            display: block;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            border-bottom: 2px solid #E5E7EB;
+        }
+
+        .tab {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #6B7280;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+        }
+
+        .tab:hover {
+            color: #2563EB;
+        }
+
+        .tab.active {
+            color: #2563EB;
+            border-bottom-color: #2563EB;
+        }
+
+        /* データテーブル */
+        .data-table-container {
+            background-color: #FFFFFF;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            display: none;
+        }
+
+        .data-table-container.active {
+            display: block;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table thead {
+            background-color: #F9FAFB;
+            border-bottom: 2px solid #E5E7EB;
+        }
+
+        .data-table th {
+            padding: 1rem;
+            text-align: left;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #4B5563;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .data-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #E5E7EB;
+            font-size: 0.875rem;
+            color: #1F2937;
+        }
+
+        .data-table tbody tr:hover {
+            background-color: #F9FAFB;
+        }
+
+        .data-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .ad-id {
+            font-family: 'Courier New', monospace;
+            color: #6B7280;
+            font-size: 0.8125rem;
+        }
+
+        /* ページング */
+        .pagination-container {
+            background-color: #FFFFFF;
+            border-radius: 8px;
+            padding: 1rem 2rem;
+            margin-top: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            display: none;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .pagination-container.active {
+            display: flex;
+        }
+
+        .pagination-info {
+            font-size: 0.875rem;
+            color: #6B7280;
+        }
+
+        .pagination {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .pagination button {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #E5E7EB;
+            background-color: #FFFFFF;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            color: #4B5563;
+            transition: all 0.2s;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            background-color: #F9FAFB;
+            border-color: #2563EB;
+            color: #2563EB;
+        }
+
+        .pagination button.active {
+            background-color: #2563EB;
+            color: #FFFFFF;
+            border-color: #2563EB;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .per-page-selector {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .per-page-selector select {
+            padding: 0.5rem;
+            border: 1px solid #E5E7EB;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            cursor: pointer;
+        }
+
+        /* モーダル */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background-color: #FFFFFF;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 1200px;
+            max-height: 90vh;
+            display: flex;
+            overflow: hidden;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-sidebar {
+            width: 240px;
+            background-color: #F9FAFB;
+            border-right: 1px solid #E5E7EB;
+            padding: 1.5rem 0;
+        }
+
+        .modal-sidebar-title {
+            padding: 0 1.5rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #6B7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 1rem;
+        }
+
+        .modal-menu-item {
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            color: #4B5563;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+
+        .modal-menu-item:hover {
+            background-color: #F3F4F6;
+            color: #2563EB;
+        }
+
+        .modal-menu-item.active {
+            background-color: #EFF6FF;
+            color: #2563EB;
+            border-left-color: #2563EB;
+            font-weight: 600;
+        }
+
+        .modal-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .modal-header {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid #E5E7EB;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1F2937;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #6B7280;
+            cursor: pointer;
+            padding: 0;
+            width: 2rem;
+            height: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            background-color: #F3F4F6;
+            color: #1F2937;
+        }
+
+        .modal-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 2rem;
+            display: flex;
+            gap: 2rem;
+        }
+
+        .modal-form {
+            flex: 1;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #D1D5DB;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: #2563EB;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .form-slider {
+            width: 100%;
+            margin-top: 0.5rem;
+        }
+
+        .slider-value {
+            font-size: 0.875rem;
+            color: #2563EB;
+            font-weight: 600;
+            margin-top: 0.25rem;
+        }
+
+        .checkbox-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+
+        .checkbox-label input[type="checkbox"] {
+            width: 1rem;
+            height: 1rem;
+            cursor: pointer;
+        }
+
+        .weekday-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .weekday-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid #D1D5DB;
+            background-color: #FFFFFF;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+
+        .weekday-btn:hover {
+            border-color: #2563EB;
+            color: #2563EB;
+        }
+
+        .weekday-btn.active {
+            background-color: #2563EB;
+            color: #FFFFFF;
+            border-color: #2563EB;
+        }
+
+        .btn-add-condition {
+            background-color: #F3F4F6;
+            color: #2563EB;
+            border: 1px dashed #2563EB;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .btn-add-condition:hover {
+            background-color: #EFF6FF;
+        }
+
+        .modal-preview {
+            width: 320px;
+            background-color: #F9FAFB;
+            border-left: 1px solid #E5E7EB;
+            padding: 1.5rem;
+        }
+
+        .preview-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #1F2937;
+            margin-bottom: 1rem;
+        }
+
+        .preview-reach {
+            background-color: #FFFFFF;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .preview-reach-label {
+            font-size: 0.75rem;
+            color: #6B7280;
+            margin-bottom: 0.25rem;
+        }
+
+        .preview-reach-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2563EB;
+        }
+
+        .preview-chart {
+            background-color: #FFFFFF;
+            padding: 1rem;
+            border-radius: 6px;
+            height: 200px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            gap: 0.5rem;
+        }
+
+        .chart-bar {
+            flex: 1;
+            background-color: #2563EB;
+            border-radius: 4px 4px 0 0;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+
+        .chart-bar:hover {
+            opacity: 1;
+        }
+
+        .modal-footer {
+            padding: 1.5rem 2rem;
+            border-top: 1px solid #E5E7EB;
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+
+        .btn-cancel {
+            padding: 0.75rem 1.5rem;
+            border: 1px solid #D1D5DB;
+            background-color: #FFFFFF;
+            color: #4B5563;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-cancel:hover {
+            background-color: #F9FAFB;
+        }
+
+        .btn-apply {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            background-color: #2563EB;
+            color: #FFFFFF;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-apply:hover {
+            background-color: #1D4ED8;
+        }
+
+        /* レスポンシブ */
+        @media (max-width: 768px) {
+            .modal {
+                flex-direction: column;
+                max-height: 95vh;
+            }
+
+            .modal-sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid #E5E7EB;
+            }
+
+            .modal-body {
+                flex-direction: column;
+            }
+
+            .modal-preview {
+                width: 100%;
+                border-left: none;
+                border-top: 1px solid #E5E7EB;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- ヘッダー -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">Weather Marketing Inc.</div>
+            <div style="font-size: 0.875rem; color: #6B7280;">
+                キャンペーン: <strong>wm_test</strong>
+            </div>
+        </div>
+    </header>
+
+    <!-- パンくず -->
+    <nav class="breadcrumb">
+        <div class="breadcrumb-content">
+            <a href="#">ホーム</a>
+            <span>›</span>
+            <span>JRデータ抽出</span>
+        </div>
+    </nav>
+
+    <!-- メインコンテンツ -->
+    <main class="main-container">
+        <!-- 抽出条件エリア -->
+        <div class="condition-area">
+            <div class="condition-header">
+                <h2 class="condition-title">抽出条件</h2>
+                <button class="btn-edit-condition" id="btnEditCondition" style="display: none;">条件を編集</button>
+            </div>
+
+            <!-- 空状態 -->
+            <div class="empty-state" id="emptyState">
+                <div class="empty-state-icon">📋</div>
+                <h3>抽出条件を設定してください</h3>
+                <p>鉄道データの抽出条件を設定すると、対象者リストがここに表示されます</p>
+                <button class="btn-set-condition" id="btnSetCondition">条件を設定する</button>
+            </div>
+
+            <!-- 条件リスト -->
+            <div class="condition-list" id="conditionList">
+                <div class="condition-item">
+                    <div class="condition-item-header">
+                        <span class="condition-category">【駅・区間】特定駅利用者</span>
+                        <span class="condition-remove" onclick="removeCondition()">✕ 削除</span>
+                    </div>
+                    <div class="condition-details">
+                        対象駅: 大阪駅 / 利用期間: 過去30日間 / 利用回数: 5回以上 / 曜日: 月〜金
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ステータスバー -->
+        <div class="status-bar">
+            <div class="status-item">
+                <span class="status-label">JR_DWH最終更新:</span>
+                <span class="status-value" id="dwhUpdateTime">--</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">抽出条件最終更新:</span>
+                <span class="status-value" id="conditionUpdateTime">--</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">抽出件数:</span>
+                <span class="status-count" id="extractCount">--</span>
+            </div>
+        </div>
+
+        <!-- ロケーションタブ -->
+        <div class="location-tabs" id="locationTabs">
+            <div class="tabs">
+                <button class="tab active" data-location="all">すべて</button>
+                <button class="tab" data-location="osaka">大阪</button>
+                <button class="tab" data-location="kyoto">京都</button>
+                <button class="tab" data-location="kobe">神戸</button>
+                <button class="tab" data-location="kanazawa">金沢</button>
+            </div>
+        </div>
+
+        <!-- データテーブル -->
+        <div class="data-table-container" id="dataTableContainer">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>広告ID（広告識別子）</th>
+                        <th>お名前</th>
+                        <th>メールアドレス</th>
+                        <th>TEL</th>
+                    </tr>
+                </thead>
+                <tbody id="dataTableBody">
+                    <!-- データはJavaScriptで動的に生成 -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ページング -->
+        <div class="pagination-container" id="paginationContainer">
+            <div class="pagination-info" id="paginationInfo">1-10件 / 全45,000件</div>
+            <div class="pagination">
+                <button id="btnPrevPage" disabled>‹ 前へ</button>
+                <button class="active">1</button>
+                <button>2</button>
+                <button>3</button>
+                <button>...</button>
+                <button>450</button>
+                <button id="btnNextPage">次へ ›</button>
+            </div>
+            <div class="per-page-selector">
+                <label for="perPage" style="font-size: 0.875rem; color: #6B7280;">表示件数:</label>
+                <select id="perPage">
+                    <option value="10" selected>10件</option>
+                    <option value="25">25件</option>
+                    <option value="50">50件</option>
+                    <option value="100">100件</option>
+                </select>
+            </div>
+        </div>
+    </main>
+
+    <!-- モーダル -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <!-- サイドバー -->
+            <div class="modal-sidebar">
+                <div class="modal-sidebar-title">条件カテゴリ</div>
+                <div class="modal-menu-item active" data-category="station">駅・区間</div>
+                <div class="modal-menu-item" data-category="pass">定期券・予約</div>
+                <div class="modal-menu-item" data-category="time">時間帯</div>
+                <div class="modal-menu-item" data-category="segment">属性・セグメント</div>
+                <div class="modal-menu-item" data-category="purchase">購買履歴</div>
+            </div>
+
+            <!-- コンテンツ -->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title">抽出条件の設定</h3>
+                    <button class="modal-close" id="modalClose">✕</button>
+                </div>
+
+                <div class="modal-body">
+                    <!-- フォーム -->
+                    <div class="modal-form">
+                        <h4 style="font-size: 1rem; font-weight: 600; margin-bottom: 1.5rem;">特定駅利用者</h4>
+
+                        <div class="form-group">
+                            <label class="form-label">対象駅</label>
+                            <input type="text" class="form-input" value="大阪駅" placeholder="駅名を入力してください">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">利用期間</label>
+                            <select class="form-select">
+                                <option value="7">過去7日間</option>
+                                <option value="30" selected>過去30日間</option>
+                                <option value="60">過去60日間</option>
+                                <option value="90">過去90日間</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">利用回数</label>
+                            <input type="range" class="form-slider" min="1" max="20" value="5" id="usageSlider">
+                            <div class="slider-value"><span id="usageValue">5</span>回以上</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">駅種別</label>
+                            <div class="checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" checked>
+                                    入場駅
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" checked>
+                                    出場駅
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">曜日指定</label>
+                            <div class="weekday-group">
+                                <button class="weekday-btn active" data-day="mon">月</button>
+                                <button class="weekday-btn active" data-day="tue">火</button>
+                                <button class="weekday-btn active" data-day="wed">水</button>
+                                <button class="weekday-btn active" data-day="thu">木</button>
+                                <button class="weekday-btn active" data-day="fri">金</button>
+                                <button class="weekday-btn" data-day="sat">土</button>
+                                <button class="weekday-btn" data-day="sun">日</button>
+                            </div>
+                        </div>
+
+                        <button class="btn-add-condition">+ 条件を追加</button>
+                    </div>
+
+                    <!-- プレビュー -->
+                    <div class="modal-preview">
+                        <div class="preview-title">配信対象者プレビュー</div>
+                        <div class="preview-reach">
+                            <div class="preview-reach-label">推定リーチ</div>
+                            <div class="preview-reach-value">約45,000人</div>
+                        </div>
+                        <div class="preview-chart">
+                            <div class="chart-bar" style="height: 60%;"></div>
+                            <div class="chart-bar" style="height: 80%;"></div>
+                            <div class="chart-bar" style="height: 100%;"></div>
+                            <div class="chart-bar" style="height: 70%;"></div>
+                            <div class="chart-bar" style="height: 90%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn-cancel" id="btnModalCancel">キャンセル</button>
+                    <button class="btn-apply" id="btnModalApply">適用する</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // サンプルデータ生成
+        const sampleNames = [
+            '山田 太郎', '佐藤 花子', '田中 一郎', '鈴木 美咲', '高橋 健太',
+            '渡辺 さくら', '伊藤 大輔', '中村 優子', '小林 翔太', '加藤 真理子'
+        ];
+
+        const sampleEmails = [
+            'yamada.t@example.com', 'sato.h@example.com', 'tanaka.i@example.com',
+            'suzuki.m@example.com', 'takahashi.k@example.com', 'watanabe.s@example.com',
+            'ito.d@example.com', 'nakamura.y@example.com', 'kobayashi.s@example.com',
+            'kato.m@example.com'
+        ];
+
+        const samplePhones = [
+            '090-1234-5678', '080-2345-6789', '070-3456-7890', '090-4567-8901',
+            '080-5678-9012', '070-6789-0123', '090-7890-1234', '080-8901-2345',
+            '070-9012-3456', '090-0123-4567'
+        ];
+
+        // 広告ID生成（36桁UUID風、最後4桁のみ表示）
+        function generateMaskedAdId(index) {
+            const lastFour = ('000' + index).slice(-4).toUpperCase();
+            return `********-****-****-****-********${lastFour}`;
+        }
+
+        // テーブルデータ生成
+        function generateTableData() {
+            const tbody = document.getElementById('dataTableBody');
+            tbody.innerHTML = '';
+
+            for (let i = 1; i <= 10; i++) {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td><span class="ad-id">${generateMaskedAdId(i)}</span></td>
+                    <td>${sampleNames[i - 1]}</td>
+                    <td>${sampleEmails[i - 1]}</td>
+                    <td>${samplePhones[i - 1]}</td>
+                `;
+            }
+        }
+
+        // 初期状態
+        let hasConditions = false;
+
+        // モーダル開く
+        function openModal() {
+            document.getElementById('modalOverlay').classList.add('active');
+        }
+
+        // モーダル閉じる
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('active');
+        }
+
+        // 条件適用
+        function applyConditions() {
+            hasConditions = true;
+
+            // 空状態を非表示
+            document.getElementById('emptyState').style.display = 'none';
+
+            // 条件リストを表示
+            document.getElementById('conditionList').classList.add('active');
+            document.getElementById('btnEditCondition').style.display = 'inline-block';
+
+            // ステータス更新
+            document.getElementById('dwhUpdateTime').textContent = '2026-02-20 04:00';
+            document.getElementById('conditionUpdateTime').textContent = '2026-02-20 09:30';
+            document.getElementById('extractCount').textContent = '45,000件';
+
+            // タブとテーブル表示
+            document.getElementById('locationTabs').classList.add('active');
+            document.getElementById('dataTableContainer').classList.add('active');
+            document.getElementById('paginationContainer').classList.add('active');
+
+            // テーブルデータ生成
+            generateTableData();
+
+            closeModal();
+        }
+
+        // 条件削除
+        function removeCondition() {
+            if (confirm('この条件を削除してもよろしいですか?')) {
+                hasConditions = false;
+
+                // 空状態を表示
+                document.getElementById('emptyState').style.display = 'block';
+
+                // 条件リストを非表示
+                document.getElementById('conditionList').classList.remove('active');
+                document.getElementById('btnEditCondition').style.display = 'none';
+
+                // ステータスリセット
+                document.getElementById('dwhUpdateTime').textContent = '2026-02-20 04:00';
+                document.getElementById('conditionUpdateTime').textContent = '--';
+                document.getElementById('extractCount').textContent = '--';
+
+                // タブとテーブル非表示
+                document.getElementById('locationTabs').classList.remove('active');
+                document.getElementById('dataTableContainer').classList.remove('active');
+                document.getElementById('paginationContainer').classList.remove('active');
+            }
+        }
+
+        // イベントリスナー
+        document.getElementById('btnSetCondition').addEventListener('click', openModal);
+        document.getElementById('btnEditCondition').addEventListener('click', openModal);
+        document.getElementById('modalClose').addEventListener('click', closeModal);
+        document.getElementById('btnModalCancel').addEventListener('click', closeModal);
+        document.getElementById('btnModalApply').addEventListener('click', applyConditions);
+
+        // モーダルオーバーレイクリックで閉じる
+        document.getElementById('modalOverlay').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        // ロケーションタブ切り替え
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // モーダルカテゴリメニュー切り替え
+        document.querySelectorAll('.modal-menu-item').forEach(item => {
+            item.addEventListener('click', function() {
+                document.querySelectorAll('.modal-menu-item').forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // 曜日ボタン切り替え
+        document.querySelectorAll('.weekday-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                this.classList.toggle('active');
+            });
+        });
+
+        // スライダー値更新
+        document.getElementById('usageSlider').addEventListener('input', function() {
+            document.getElementById('usageValue').textContent = this.value;
+        });
+
+        // ページング（簡易実装）
+        document.getElementById('btnNextPage').addEventListener('click', function() {
+            alert('次のページ機能（実装例）');
+        });
+    </script>
+</body>
+</html>

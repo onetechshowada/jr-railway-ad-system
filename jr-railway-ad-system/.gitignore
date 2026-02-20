@@ -1,0 +1,45 @@
+# Gitignore for JR Railway Ad System
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Editor Files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Dependencies
+node_modules/
+vendor/
+
+# Build Output
+dist/
+build/
+out/
+
+# Environment Variables
+.env
+.env.local
+.env.*.local
+
+# Database
+*.sqlite
+*.db
+
+# Cache
+.cache/
+*.cache
+
+# Temporary Files
+tmp/
+temp/
+*.tmp
