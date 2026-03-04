@@ -1,0 +1,40 @@
+# ========================================
+# GitHubプッシュコマンド（順番に実行）
+# ========================================
+
+# ステップ1: 現在地確認
+pwd
+# 出力: /path/to/jr-railway-ad-system であることを確認
+
+# ステップ2: Gitの状態確認
+git status
+
+# ステップ3: リモートリポジトリ追加
+# ⚠️ YOUR_USERNAME を自分のGitHubユーザー名に変更してください
+git remote add origin https://github.com/YOUR_USERNAME/jr-railway-ad-system.git
+
+# ステップ4: リモート設定確認
+git remote -v
+# 出力例:
+# origin  https://github.com/YOUR_USERNAME/jr-railway-ad-system.git (fetch)
+# origin  https://github.com/YOUR_USERNAME/jr-railway-ad-system.git (push)
+
+# ステップ5: ブランチ名をmainに変更
+git branch -M main
+
+# ステップ6: プッシュ！
+git push -u origin main
+
+# ========================================
+# 認証情報の入力（プッシュ時に求められます）
+# ========================================
+# Username: あなたのGitHubユーザー名
+# Password: 取得したPersonal Access Token（github_pat_xxxxx... または ghp_xxxxx...）
+#          ⚠️ 通常のパスワードではありません！
+
+# ========================================
+# プッシュ成功後の確認
+# ========================================
+# ブラウザでGitHubリポジトリにアクセスして、ファイルが表示されることを確認してください
+# https://github.com/YOUR_USERNAME/jr-railway-ad-system
+
